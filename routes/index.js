@@ -12,30 +12,46 @@ router.use(
   })
 );
 
-router.post("/login", function (request, response) {
+router.post("/login", async function (request, response) {
   // Capture the input fields
-  let username = request.body.username;
-  let password = request.body.password;
+  let username = await request.body.username;
+  let password = await request.body.password;
 
   // Ensure the input fields exists and are not empty
   if (username && password) {
     // Execute SQL query that'll select the account from the database based on the specified username and password
-    database.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], function(error, results, fields) {
-    	// If there is an issue with the query, output the error
-    	if (error) throw error;
-    	// If the account exists
-    	if (results.length > 0) {
-    
-    		// Redirect to home page
-            response.send(username);
-    	} else {
-    		response.send('Incorrect Username and/or Password!');
-    	}
-    	response.end();
-    });
+
+    database.query(
+      "SELECT * FROM users WHERE username = ? AND password = ?",
+      [username, password],
+      function (error, results) {
+        // If there is an issue with the query, output the error
+       
+
+        
+
+        try {
+			// If the account exists
+          if (results.length > 0) {
+            // Redirect to home page
+            console.log("y");
+            return response.status(200).json({ username: username });
+          } else {
+            // response.send('Incorrect Username and/or Password!');
+            console.log("x");
+            return response
+              .status(400)
+              .json({ error: "Incorrect username or password" });
+          }
+        } catch (error) {
+          return response.status(500).json({ error: "internal server error" });
+        }
+      }
+    );
   } else {
-    response.send("Please enter Username and Password!");
-    response.end();
+    return response
+      .status(401)
+      .json({ error: "Please enter Username and Password!" });
   }
 });
 
