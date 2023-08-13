@@ -26,19 +26,14 @@ router.post("/login", async function (request, response) {
       [username, password],
       function (error, results) {
         // If there is an issue with the query, output the error
-       
-
-        
 
         try {
-			// If the account exists
+          // If the account exists
           if (results.length > 0) {
             // Redirect to home page
-            console.log("y");
             return response.status(200).json({ username: username });
           } else {
             // response.send('Incorrect Username and/or Password!');
-            console.log("x");
             return response
               .status(400)
               .json({ error: "Incorrect username or password" });
