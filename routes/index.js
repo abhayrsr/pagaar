@@ -29,9 +29,11 @@ router.post("/login", async function (request, response) {
 
         try {
           // If the account exists
+          
           if (results.length > 0) {
-            // Redirect to home page
+
             return response.status(200).json({ username: username });
+
           } else {
             // response.send('Incorrect Username and/or Password!');
             return response
