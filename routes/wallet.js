@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express();
 var database = require("../database");
-const bodyParser = require("body-parser");
+
 
 
 router.get('/wallet', function(request, response){
