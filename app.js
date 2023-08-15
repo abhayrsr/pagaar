@@ -9,10 +9,6 @@ var walletRouter = require("./routes/wallet");
 app.use("/users", indexRouter);
 app.use("/users", walletRouter);
 
-// app.get('/', (req, res) => {
-//   res.send('Hello World!')
-// })
-
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
