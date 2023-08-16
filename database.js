@@ -1,23 +1,13 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
+const bluebird = require('bluebird');
 require('dotenv').config();
 
-const connection = mysql.createConnection({
+const connection = mysql.createPool({
 	host: process.env.host,
-    user: process.env.user,
-    password: process.env.password,
-    database: process.env.database,
-});
-
-connection.connect(function(error){
-	if(error)
-	{
-		console.error('error connecting: ' + error.stack);
-        return;
-	}
-	else
-	{
-		console.log('connected as id ' + connection.threadId);
-	}
+	user: process.env.user,
+	password: process.env.password,
+	database: process.env.database,
+	Promise: bluebird
 });
 
 module.exports = connection;
