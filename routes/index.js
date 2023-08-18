@@ -1,5 +1,6 @@
 var express = require("express");
 var router = express();
+var status = require("http-status")
 
 const database = require("../database");
 const bodyParser = require("body-parser");
@@ -26,23 +27,23 @@ try {
         ]);
 
         if (rows.length > 0) {
-          return response.status(200).json({ username: username });
+          return response.status(status.OK).json({ username: username });
         } else {
           return response
-            .status(400)
+            .status(status.BAD_REQUEST)
             .json({ error: "Incorrect username or password" });
         }
       } else {
         return response
-          .status(401)
+          .status(status.UNAUTHORIZED)
           .json({ error: "Please enter Username and Password!" });
       }
     } catch (error) {
-      return response.status(500).json({ error: "internal server error" });
+      return response.status(status.INTERNAL_SERVER_ERROR).json({ error: "internal server error" });
     }
   });
 } catch (error) {
-  return response.status(500).json({ error: "internal server error" });
+  return response.status(status.INTERNAL_SERVER_ERROR).json({ error: "internal server error" });
 }
 
 module.exports = router;
