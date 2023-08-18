@@ -49,26 +49,16 @@ try {
             [data.receiver_id]
           );
 
-          const senderTransactionQuery = `insert into transactions(sender_id, receiver_id, status, amount) values (?,?,?,?)`;
+          const senderTransactionQuery = `insert into transactions(sender_id, receiver_id, status, amount) values (${data.sender_id},${data.receiver_id},"sent",${data.amount});`;
           const [senderTransaction, field3] = await database.query(
-            senderTransactionQuery,
-            [data.sender_id, data.receiver_id, "sent", data.amount]
+            senderTransactionQuery
           );
-
-          const transactionQuery = `select transaction_id, transaction_date from transactions where sender_id = ? AND receiver_id = ?`;
-          const [transaction, field4] = await database.query(transactionQuery, [
-            data.sender_id,
-            data.receiver_id,
-          ]);
 
           return response.status(status.OK).json({
             data: {
-              transaction_id:
-                transaction[transaction.length - 1].transaction_id,
+              transaction_id: senderTransaction.insertId,
               sender_id: data.sender_id,
               receiver_id: data.receiver_id,
-              transaction_date:
-                transaction[transaction.length - 1].transaction_date,
               status: "sent",
               amount: data.amount,
               balance: balance,
