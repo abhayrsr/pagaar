@@ -1,6 +1,6 @@
 var express = require("express");
 var router = express();
-var status = require("http-status")
+var status = require("http-status");
 
 const database = require("../database");
 const bodyParser = require("body-parser");

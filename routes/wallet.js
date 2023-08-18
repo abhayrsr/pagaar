@@ -1,7 +1,7 @@
 var express = require("express");
 var router = express();
 var database = require("../database");
-var status = require("http-status")
+var status = require("http-status");
 
 try {
   router.get("/wallet", async function (request, response) {

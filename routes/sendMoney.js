@@ -19,8 +19,10 @@ try {
     const query = `select balance from wallet where user_id = ?`;
 
     try {
-      if (data.amount < 0) throw new Error("invalid amount");
+      if (data.amount < 0) throw new Error("Invalid amount");
 
+      if(data.sender_id == data.receiver_id) throw new Error("Change receiver_id");
+ 
       if (data.sender_id && data.receiver_id && data.amount) {
         const [rows, fields] = await database.query(query, [data.sender_id]);
         if (rows[0] === undefined) throw new Error("Incorrect sender_id");
