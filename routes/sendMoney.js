@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express();
 var database = require("../database");
+var status = require("http-status");
 
 const bodyParser = require("body-parser");
 
@@ -12,65 +13,89 @@ router.use(
   })
 );
 
-router.post("/sendmoney", async function (request, response) {
-  const data = await request.body;
+try {
+  router.post("/sendmoney", async function (request, response) {
+    const data = request.body;
+    const query = `select balance from wallet where user_id = ?`;
 
-  if (data.sender_id && data.receiver_id && data.amount) {
-    database.query(
-      "select balance from wallet where user_id = ?",
-      [data.sender_id],
-      function (err, results) {
-        try {
-          var balance = results[0].balance;
-        } catch (error) {
-          return response.send("invalid sender id");
-        }
+    try {
+      if (data.amount < 0) throw new Error("invalid amount");
 
-        if (data.amount < balance) {
-          database.query(
-            `update transactions set amount = ${data.amount} where sender_id = ? and receiver_id = ?`,
-            [data.sender_id, data.receiver_id]
-          );
-          database.query(
-            `update wallet set balance = ${balance} - ${data.amount} where user_id = ?`,
+      if (data.sender_id && data.receiver_id && data.amount) {
+        const [rows, fields] = await database.query(query, [data.sender_id]);
+        if (rows[0] === undefined) throw new Error("Incorrect sender_id");
+
+        var balance = rows[0].balance;
+
+        if (balance == undefined) throw new Error("Incorrect balance");
+
+        const receiverQuery = `select user_id from wallet where user_id = ?`;
+        const [receiver, field] = await database.query(receiverQuery, [
+          data.receiver_id,
+        ]);
+
+        if (receiver[0] === undefined) throw new Error("Incorrect receiver_id");
+
+        if (data.amount <= balance) {
+          const senderBalanaceQuery = `update wallet set balance = ${balance} - ${data.amount} where user_id = ?`;
+          const [senderBalance, fields1] = await database.query(
+            senderBalanaceQuery,
             [data.sender_id]
           );
-          database.query(
-            `update wallet set balance = ${balance} + ${data.amount} where user_id = ?`,
+
+          const receiverBalanceQuery = `update wallet set balance = ${balance} + ${data.amount} where user_id = ?`;
+          const [receiverBalance, fields2] = await database.query(
+            receiverBalanceQuery,
             [data.receiver_id]
           );
-          database.query(
-            `insert into transactions(sender_id, receiver_id, status, amount) values (?, ?, ?, ?)`,
+
+          const senderTransactionQuery = `insert into transactions(sender_id, receiver_id, status, amount) values (?,?,?,?)`;
+          const [senderTransaction, field3] = await database.query(
+            senderTransactionQuery,
             [data.sender_id, data.receiver_id, "sent", data.amount]
           );
 
-          database.query(
-            `select transactions.transaction_id, transactions.sender_id, transactions.receiver_id, transactions.transaction_date, transactions.status, transactions.amount, wallet.balance from transactions inner join wallet on transactions.sender_id = wallet.user_id where sender_id = ${data.sender_id}`,
+          const transactionQuery = `select transaction_id, transaction_date from transactions where sender_id = ? AND receiver_id = ?`;
+          const [transaction, field4] = await database.query(transactionQuery, [
+            data.sender_id,
+            data.receiver_id,
+          ]);
 
-            function (error, results) {
-              try {
-                if (results.length > 0) {
-                  return response.status(200).json({ data: results });
-                }
-              } catch (error) {
-                return response
-                  .status(400)
-                  .json({ error: "Incorrect details" });
-              }
-            }
-          );
+          return response.status(status.OK).json({
+            data: {
+              transaction_id:
+                transaction[transaction.length - 1].transaction_id,
+              sender_id: data.sender_id,
+              receiver_id: data.receiver_id,
+              transaction_date:
+                transaction[transaction.length - 1].transaction_date,
+              status: "sent",
+              amount: data.amount,
+              balance: balance,
+            },
+          });
         } else if (data.amount > balance) {
-          return response.send("Insufficient balance");
+          throw new Error("Insufficient balance");
         } else {
-          return response.status(500).json({ error: "Internal server error" });
+          return response
+            .status(status.INTERNAL_SERVER_ERROR)
+            .json({ error: "Internal server error" });
         }
+      } else {
+        return response
+          .status(status.UNAUTHORIZED)
+          .json({ error: "enter required credentials properly" });
       }
-    );
-  } else {
-    return response
-      .status(401)
-      .json({ error: "enter required credentials properly" });
-  }
-});
+    } catch (errors) {
+      return response
+        .status(status.BAD_REQUEST)
+        .json({ error: errors.message });
+    }
+  });
+} catch (error) {
+  return response
+    .status(status.INTERNAL_SERVER_ERROR)
+    .json({ error: "internal server error" });
+}
 
 module.exports = router;
