@@ -17,15 +17,12 @@ try {
   router.post("/login", async function (request, response) {
     const username = request.body.username;
     const password = request.body.password;
-    const query = "SELECT * FROM users WHERE username = ? AND password = ?";
-
+    const query = 'SELECT * FROM `users` WHERE `username` = ? AND `password` = ?';
+    
     try {
       if (username && password) {
-        const [rows, fields] = await database.query(query, [
-          username,
-          password,
-        ]);
-
+        const [rows, fields] = await database.execute(query, [username.username, password.password]);
+        
         if (rows.length > 0) {
           return response.status(status.OK).json({ username: username });
         } else {
