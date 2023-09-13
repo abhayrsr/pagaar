@@ -2,9 +2,11 @@ var express = require("express");
 var router = express();
 var database = require("../database");
 var status = require("http-status");
+const jwt = require('jsonwebtoken');
+const verifyToken = require('./verifyToken');
 
 try {
-  router.get("/search", async function (request, response) {
+  router.get("/search", verifyToken, async function (request, response) {
   const username = request.query.username;
   const query = `select username, first_name, last_name, address from users where LOWER(username) LIKE '%${username}%'`;
 
@@ -12,7 +14,8 @@ try {
       try {
         const [rows, fields] = await database.query(query);
         if (rows.length > 0) {
-          return response.status(status.OK).json({ data: rows });
+          const user = request.decoded;
+          return response.status(status.OK).json({ data: rows, user: user });
         } else {
           return response.status(status.BAD_REQUEST).json({ error: "Incorrect username" });
         }
