@@ -8,7 +8,7 @@ const verifyToken = require("./verifyToken");
 try {
   router.get("/search", verifyToken, async function (request, response) {
     const username = request.query.username;
-    const query = `select username, first_name, last_name, address from users where LOWER(username) LIKE '%${username}%'`;
+    const query = `select username, first_name, last_name, address from users where LOWER(username) LIKE '${username.toLowerCase()}%'`;
 
     if (username) {
       try {
@@ -17,9 +17,14 @@ try {
         if (rows.length > 0) {
           const userData = request.user;
 
+          const users = rows.map((row) => ({
+            username: row.username,
+            user: userData
+          }))
+
           return response
             .status(status.OK)
-            .json({ username: rows[0].username, user: userData });
+            .json({ users });
         } else {
           return response
             .status(status.BAD_REQUEST)
