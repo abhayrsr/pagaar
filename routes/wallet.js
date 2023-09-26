@@ -5,12 +5,12 @@ var status = require("http-status");
 
 try {
   router.get("/wallet", async function (request, response) {
-    const walletId = request.query.wallet_id;
-    const query = `select wallet_id, balance from wallet where wallet_id = ?`;
+    const username = request.query.username;
+    const query = `select username, balance from wallet where username = ?`;
 
-    if (walletId) {
+    if (username) {
       try {
-        const [rows, fields] = await database.query(query, [walletId]);
+        const [rows, fields] = await database.query(query, [username]);
         if (rows.length > 0) {
           return response.status(status.OK).json({ data: rows });
         } else {
